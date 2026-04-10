@@ -19,9 +19,14 @@ object PetriNet:
         if m disjoined inh          // check inhibition
         out <- m extract cond       // remove precondition
       yield out union eff           // add effect
-
+  
   // fancy syntax to create transition rules
+  extension [P, T <: Tuple](self: T)
+    def ~~> (y: P)(using Tuple.Union[T] <:< P): Trn[P] = 
+      Trn(MSet(self.toList.map(_.asInstanceOf[P])*), MSet(y), MSet())
+    def ~~> (y: Marking[P]) = Trn(MSet(self), MSet(y), MSet())
+    def foo(): Unit = ()
   extension [P](self: Marking[P])
     def ~~> (y: Marking[P]) = Trn(self, y, MSet())
   extension [P](self: Trn[P])
-    def ^^^ (z: Marking[P]) = self.copy(inh = z)
+    def ^^^ (z: Marking[P]): Trn[P] = self.copy(inh = z)

@@ -11,6 +11,7 @@ trait MSet[A] extends (A => Int):
   def asList: List[A]
   def asMap: Map[A,Int]
   def iterator: Iterator[A]
+  def printMap: String
 
 // Functional-style helpers/implementation
 object MSet:
@@ -25,7 +26,7 @@ object MSet:
     override val asList =
       asMap.toList.flatMap((a,n) => List.fill(n)(a))
 
-    override def apply(v1: A) = asMap.getOrElse(v1,0)
+    override def apply(v1: A): Int = asMap.getOrElse(v1,0)
     override def union(m: MSet[A]) = new MSetImpl[A](asList ++ m.asList)
     override def diff(m: MSet[A]) = new MSetImpl[A](asList diff m.asList)
     override def disjoined(m: MSet[A]) = (asList intersect m.asList).isEmpty
@@ -35,3 +36,4 @@ object MSet:
       Some(this diff m) filter (_.size == size - m.size)
     override def iterator = asMap.keysIterator
     override def toString = s"{${asList.mkString("|")}}"
+    override def printMap = s"$asMap"
