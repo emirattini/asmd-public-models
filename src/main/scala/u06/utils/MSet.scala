@@ -19,6 +19,8 @@ object MSet:
   def apply[A](l: A*): MSet[A] = new MSetImpl(l.toList)
   def ofList[A](l: List[A]): MSet[A] = new MSetImpl(l)
   def ofMap[A](m: Map[A,Int]): MSet[A] = MSetImpl(m)
+  def ofTuple[A, T <: Tuple](t: T)(using Tuple.Union[T] <:< A): MSet[A] =
+    ofList(t.toList.map(_.asInstanceOf[A]))
 
   // Hidden reference implementation
   private case class MSetImpl[A](asMap: Map[A,Int]) extends MSet[A]:

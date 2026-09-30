@@ -20,13 +20,20 @@ object PetriNet:
         out <- m extract cond       // remove precondition
       yield out union eff           // add effect
   
+  // anything that can stand on a side of ~~>: a place, a tuple of places, a marking
+  trait AsMarking[X, P]:
+    def apply(x: X): Marking[P]
+  object AsMarking extends LowPriorityAsMarking:
+    given tuple[P, T <: Tuple](using Tuple.Union[T] <:< P): AsMarking[T, P] =
+      MSet.ofTuple(_)
+    given marking[P]: AsMarking[Marking[P], P] = identity(_)
+  trait LowPriorityAsMarking:
+    given single[P]: AsMarking[P, P] = MSet(_)
+
   // fancy syntax to create transition rules
-  extension [P, T <: Tuple](self: T)
-    def ~~> (y: P)(using Tuple.Union[T] <:< P): Trn[P] = 
-      Trn(MSet(self.toList.map(_.asInstanceOf[P])*), MSet(y), MSet())
-    def ~~> (y: Marking[P]) = Trn(MSet(self), MSet(y), MSet())
-    def foo(): Unit = ()
-  extension [P](self: Marking[P])
-    def ~~> (y: Marking[P]) = Trn(self, y, MSet())
+  extension [X](self: X)
+    def ~~> [Y, P](y: Y)(using l: AsMarking[X, P], r: AsMarking[Y, P]): Trn[P] =
+      Trn(l(self), r(y), MSet())
   extension [P](self: Trn[P])
     def ^^^ (z: Marking[P]): Trn[P] = self.copy(inh = z)
+    def ^^^ [Z](z: Z)(using r: AsMarking[Z, P]): Trn[P] = self.copy(inh = r(z))
